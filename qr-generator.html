@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator – Work Order Form</title>
+  <!-- QR code library (no server needed) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:  #0a2342;
+      --blue:  #1565c0;
+      --accent:#ffc107;
+      --border:#c5cae9;
+      --white: #ffffff;
+      --muted: #5c6bc0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    header {
+      background: var(--navy);
+      color: var(--white);
+      border-radius: 10px 10px 0 0;
+      padding: 20px 24px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .cg-badge {
+      width: 52px; height: 52px; flex-shrink: 0;
+      background: var(--accent); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 900; color: var(--navy);
+    }
+
+    header h1 { font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+    header p  { font-size: 0.78rem; color: #90caf9; margin-top: 2px; }
+
+    .card {
+      background: var(--white);
+      border-radius: 0 0 10px 10px;
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 24px;
+      max-width: 560px;
+      margin: 0 auto 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .section-title {
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+      padding-bottom: 6px; margin: 20px 0 14px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+
+    label { font-size: 0.78rem; font-weight: 600; color: var(--navy); }
+
+    input[type="url"], input[type="text"] {
+      width: 100%; border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 10px; font-size: 0.88rem; font-family: inherit;
+      background: #fafbff; color: #1a1a2e;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus {
+      outline: none; border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(21,101,192,0.12); background: var(--white);
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 10px 20px; border-radius: 7px; font-size: 0.88rem; font-weight: 700;
+      border: none; cursor: pointer; transition: background 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--blue); color: var(--white); width: 100%; margin-top: 4px; }
+    .btn-primary:hover { background: #0d47a1; }
+    .btn-secondary { background: #e3f2fd; color: var(--blue); }
+    .btn-secondary:hover { background: #bbdefb; }
+
+    /* ── QR output ── */
+    #qrOutput { display: none; }
+
+    #qrOutput .section-title { margin-top: 24px; }
+
+    #qrCanvas {
+      display: block;
+      margin: 0 auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .qr-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    /* ── Print styles ── */
+    @media print {
+      body { background: white; padding: 0; }
+      header, .card { max-width: 100%; border-radius: 0; box-shadow: none; }
+      .no-print { display: none !important; }
+      #qrOutput { display: block !important; }
+      .setup-section { display: none !important; }
+      .print-label {
+        text-align: center;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #000;
+        margin-top: 8px;
+      }
+      .print-url {
+        text-align: center;
+        font-size: 0.7rem;
+        color: #555;
+        word-break: break-all;
+        margin-top: 4px;
+      }
+    }
+
+    .hint {
+      font-size: 0.74rem; color: #888; margin-top: 6px; line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="cg-badge">CG</div>
+  <div>
+    <h1>QR Code Generator</h1>
+    <p>Admin tool &mdash; generate &amp; print the QR code for your unit.</p>
+  </div>
+</header>
+
+<div class="card">
+
+  <!-- ── Setup ── -->
+  <div class="setup-section">
+    <div class="section-title">Setup</div>
+
+    <div class="field">
+      <label for="formUrl">Work Order Form URL</label>
+      <input type="url" id="formUrl"
+             placeholder="https://your-unit.github.io/gamma/index.html" />
+      <p class="hint">
+        Paste the URL where <code>index.html</code> is hosted (e.g. GitHub Pages, your unit's intranet, or a file share URL).
+        The QR code will point directly to this page.
+      </p>
+    </div>
+
+    <div class="field">
+      <label for="labelText">QR Code Label (printed below the code)</label>
+      <input type="text" id="labelText" value="Scan to Submit a Work Order Request" />
+    </div>
+
+    <button class="btn btn-primary no-print" onclick="generateQR()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 3h7v7H3zm1 1v5h5V4zm1 1h3v3H5zm8-2h7v7h-7zm1 1v5h5V4zm1 1h3v3h-3zM3 14h7v7H3zm1 1v5h5v-5zm1 1h3v3H5zm13 1h2v2h-2zm-4 0h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2zm-4 0h2v2h-2z"/>
+      </svg>
+      Generate QR Code
+    </button>
+  </div>
+
+  <!-- ── QR Output ── -->
+  <div id="qrOutput">
+    <div class="section-title">Your QR Code</div>
+    <canvas id="qrCanvas"></canvas>
+    <p class="print-label" id="printLabel"></p>
+    <p class="print-url"   id="printUrl"></p>
+
+    <div class="qr-actions no-print">
+      <button class="btn btn-secondary" onclick="downloadQR()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 9h-4V3H9v6H5l7 7zm-8 2V5h2v6h1.17L12 13.17 9.83 11zm-3.58 7H5v2h14v-2h-3.42l-1.41-1.41-1.41 1.41z"/>
+        </svg>
+        Download PNG
+      </button>
+      <button class="btn btn-secondary" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+        </svg>
+        Print
+      </button>
+      <button class="btn btn-secondary no-print" onclick="resetForm()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/>
+        </svg>
+        Reset
+      </button>
+    </div>
+
+    <p class="hint no-print" style="margin-top:12px; text-align:center;">
+      Print this page and post it where members can scan it. The QR code opens the work order form directly on their device.
+    </p>
+  </div>
+
+</div>
+
+<script>
+  function generateQR() {
+    const url   = document.getElementById('formUrl').value.trim();
+    const label = document.getElementById('labelText').value.trim();
+
+    if (!url) {
+      alert('Please enter the URL of the work order form.');
+      document.getElementById('formUrl').focus();
+      return;
+    }
+
+    const canvas = document.getElementById('qrCanvas');
+
+    QRCode.toCanvas(canvas, url, {
+      width: 260,
+      margin: 2,
+      color: { dark: '#0a2342', light: '#ffffff' },
+      errorCorrectionLevel: 'H'
+    }, function (err) {
+      if (err) { console.error(err); alert('Error generating QR code: ' + err.message); return; }
+
+      document.getElementById('printLabel').textContent = label;
+      document.getElementById('printUrl').textContent   = url;
+      document.getElementById('qrOutput').style.display = 'block';
+      document.getElementById('qrOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function downloadQR() {
+    const canvas = document.getElementById('qrCanvas');
+    const link   = document.createElement('a');
+    link.download = 'work-order-qr-code.png';
+    link.href     = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  function resetForm() {
+    document.getElementById('qrOutput').style.display = 'none';
+    document.getElementById('formUrl').value = '';
+    document.getElementById('labelText').value = 'Scan to Submit a Work Order Request';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Allow pressing Enter in URL field to generate
+  document.getElementById('formUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') generateQR();
+  });
+</script>
+</body>
+</html>

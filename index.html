@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Order Request</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0a2342;
+      --blue:   #1565c0;
+      --accent: #ffc107;
+      --light:  #e8f0fe;
+      --border: #c5cae9;
+      --text:   #1a1a2e;
+      --muted:  #5c6bc0;
+      --red:    #c62828;
+      --white:  #ffffff;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: var(--white);
+      border-radius: 10px 10px 0 0;
+      padding: 20px 24px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .cg-badge {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--navy);
+      letter-spacing: -1px;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    header p {
+      font-size: 0.8rem;
+      color: #90caf9;
+      margin-top: 2px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--white);
+      border-radius: 0 0 10px 10px;
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 24px;
+      max-width: 680px;
+      margin: 0 auto 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    /* ── Section headings ── */
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin: 20px 0 14px;
+    }
+
+    .section-title:first-child { margin-top: 0; }
+
+    /* ── Grid ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 500px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Form elements ── */
+    .field { display: flex; flex-direction: column; gap: 4px; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    label .req { color: var(--red); margin-left: 2px; }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      color: var(--text);
+      background: #fafbff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
+      background: var(--white);
+    }
+
+    textarea { resize: vertical; min-height: 90px; }
+
+    select { appearance: none; cursor: pointer; }
+
+    /* ── Priority pills ── */
+    .priority-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .priority-group input[type="radio"] { display: none; }
+
+    .priority-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      color: #555;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .priority-group input[value="Routine"]:checked + label   { border-color: #2e7d32; color: #2e7d32; background: #e8f5e9; }
+    .priority-group input[value="Urgent"]:checked + label    { border-color: #e65100; color: #e65100; background: #fff3e0; }
+    .priority-group input[value="Emergency"]:checked + label { border-color: var(--red); color: var(--red); background: #ffebee; }
+
+    /* ── Submit button ── */
+    .btn-submit {
+      width: 100%;
+      margin-top: 22px;
+      padding: 13px;
+      background: var(--blue);
+      color: var(--white);
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-submit:hover  { background: #0d47a1; }
+    .btn-submit:active { transform: scale(0.98); }
+
+    .btn-submit svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* ── Helper note ── */
+    .note {
+      font-size: 0.74rem;
+      color: #888;
+      margin-top: 10px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Validation highlight ── */
+    input.invalid, select.invalid, textarea.invalid {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(198,40,40,0.1);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="cg-badge">CG</div>
+  <div>
+    <h1>Work Order Request</h1>
+    <p>Complete the form below &mdash; your email client will open with the template ready to send.</p>
+  </div>
+</header>
+
+<div class="card">
+  <form id="woForm" novalidate>
+
+    <!-- ── Requestor Details ── -->
+    <div class="section-title">Requestor Details</div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="name">Full Name <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="e.g. Petty Officer Smith" required />
+      </div>
+      <div class="field">
+        <label for="rank">Rank / Rate</label>
+        <input type="text" id="rank" placeholder="e.g. BM3" />
+      </div>
+      <div class="field">
+        <label for="unit">Unit / Station <span class="req">*</span></label>
+        <input type="text" id="unit" placeholder="e.g. Station Cape Disappointment" required />
+      </div>
+      <div class="field">
+        <label for="contact">Contact Number <span class="req">*</span></label>
+        <input type="tel" id="contact" placeholder="e.g. (555) 000-1234" required />
+      </div>
+    </div>
+
+    <!-- ── Work Order Details ── -->
+    <div class="section-title">Work Order Details</div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="date">Date of Request <span class="req">*</span></label>
+        <input type="date" id="date" required />
+      </div>
+      <div class="field">
+        <label for="requestedDate">Requested Completion Date</label>
+        <input type="date" id="requestedDate" />
+      </div>
+      <div class="field">
+        <label for="category">Category <span class="req">*</span></label>
+        <select id="category" required>
+          <option value="">-- Select category --</option>
+          <option>Maintenance</option>
+          <option>Repair</option>
+          <option>Inspection</option>
+          <option>Installation</option>
+          <option>Fabrication</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="asset">Vessel / Asset / Equipment</label>
+        <input type="text" id="asset" placeholder="e.g. 47 MLB, Hull #1234" />
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:12px;">
+      <label for="location">Location / Where Work is Needed</label>
+      <input type="text" id="location" placeholder="e.g. Pier 3, Engine Room, Boathouse B" />
+    </div>
+
+    <!-- ── Priority ── -->
+    <div class="section-title">Priority</div>
+    <div class="priority-group" id="priorityGroup" role="group" aria-label="Priority">
+      <input type="radio" name="priority" id="pRoutine" value="Routine" checked />
+      <label for="pRoutine">Routine</label>
+      <input type="radio" name="priority" id="pUrgent" value="Urgent" />
+      <label for="pUrgent">Urgent</label>
+      <input type="radio" name="priority" id="pEmergency" value="Emergency" />
+      <label for="pEmergency">Emergency</label>
+    </div>
+
+    <!-- ── Description ── -->
+    <div class="section-title">Description</div>
+    <div class="field">
+      <label for="description">Description of Work Required <span class="req">*</span></label>
+      <textarea id="description" placeholder="Describe the work needed in as much detail as possible..." required></textarea>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label for="notes">Additional Notes / Special Instructions</label>
+      <textarea id="notes" style="min-height:60px;" placeholder="Any safety concerns, access requirements, parts needed, etc."></textarea>
+    </div>
+
+    <button type="submit" class="btn-submit">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      Open Email Client with Template
+    </button>
+
+    <p class="note">
+      Your default email app will open with this request pre-filled.<br/>
+      Review, then hit <strong>Send</strong> from your personal email account.
+    </p>
+
+  </form>
+</div>
+
+<script>
+  // ── Configuration ── change these two values for your unit ──────────────
+  const WORK_ORDER_EMAIL = 'workorders@your-unit.uscg.mil'; // <-- set your work order group email
+  const UNIT_NAME        = 'U.S. Coast Guard';               // <-- set your unit/district name
+  // ────────────────────────────────────────────────────────────────────────
+
+  // Pre-fill today's date
+  document.getElementById('date').valueAsDate = new Date();
+
+  const form = document.getElementById('woForm');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Clear previous validation state
+    document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+
+    // Required fields
+    const required = ['name', 'unit', 'contact', 'date', 'category', 'description'];
+    let valid = true;
+    required.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.classList.add('invalid');
+        valid = false;
+      }
+    });
+
+    if (!valid) {
+      const firstInvalid = document.querySelector('.invalid');
+      if (firstInvalid) firstInvalid.focus();
+      return;
+    }
+
+    // Collect values
+    const name          = document.getElementById('name').value.trim();
+    const rank          = document.getElementById('rank').value.trim();
+    const unit          = document.getElementById('unit').value.trim();
+    const contact       = document.getElementById('contact').value.trim();
+    const date          = document.getElementById('date').value;
+    const requestedDate = document.getElementById('requestedDate').value;
+    const category      = document.getElementById('category').value;
+    const asset         = document.getElementById('asset').value.trim();
+    const location      = document.getElementById('location').value.trim();
+    const priority      = document.querySelector('input[name="priority"]:checked').value;
+    const description   = document.getElementById('description').value.trim();
+    const notes         = document.getElementById('notes').value.trim();
+
+    // Format date for display
+    const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : 'N/A';
+
+    // Build email
+    const subject = `[Work Order] ${category} – ${priority} – ${fmt(date)}`;
+
+    const body = [
+      `WORK ORDER REQUEST`,
+      `${'='.repeat(50)}`,
+      ``,
+      `Date of Request : ${fmt(date)}`,
+      `Requested By    : ${rank ? rank + ' ' : ''}${name}`,
+      `Unit / Station  : ${unit}`,
+      `Contact Number  : ${contact}`,
+      ``,
+      `WORK ORDER DETAILS`,
+      `${'='.repeat(50)}`,
+      ``,
+      `Category        : ${category}`,
+      `Priority        : ${priority.toUpperCase()}`,
+      `Vessel / Asset  : ${asset  || 'N/A'}`,
+      `Location        : ${location || 'N/A'}`,
+      `Requested By    : ${fmt(requestedDate)}`,
+      ``,
+      `DESCRIPTION`,
+      `${'='.repeat(50)}`,
+      ``,
+      description,
+      ``,
+      notes ? `ADDITIONAL NOTES\n${'='.repeat(50)}\n\n${notes}\n` : null,
+      `${'─'.repeat(50)}`,
+      `Submitted via ${UNIT_NAME} Work Order Form`,
+    ].filter(line => line !== null).join('\n');
+
+    // Open mailto
+    const mailto = `mailto:${encodeURIComponent(WORK_ORDER_EMAIL)}`
+                 + `?subject=${encodeURIComponent(subject)}`
+                 + `&body=${encodeURIComponent(body)}`;
+
+    window.location.href = mailto;
+  });
+
+  // Remove invalid class on input
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('input', () => el.classList.remove('invalid'));
+  });
+</script>
+</body>
+</html>
